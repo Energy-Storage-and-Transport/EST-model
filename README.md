@@ -54,7 +54,18 @@ the energy which is then injected is given by
 $$P_{To Storage} = P_{To Injection} - D_{Injection}$$
 
 ### Storage
-TO DO
+During storing of the energy in the storage containment system, energy is injected and extracted. Some of the energy is also dissipated which can be described by
+
+*Hier nog even goed naar kijken! Laatste term verandert in $P_{To Storage}+P_{From Storage}$, want anders is dissipation positief tijdens extractie.*
+$$D_{Storage}=\beta_{Storage}\frac{1}{1+\alpha_{Storage}}(E_{Storage}-E_{Storage Min})+\frac{\alpha_{Storage}}{1+\alpha_{Storage}}(P_{To Storage}+P_{From Storage})$$
+
+From this equation, it can be seen that for $\alpha &#8594 \infty$, the energy difference disappears and only the power term contributes to the dissipated energy. For $\alpha &#8594 0$, the power term disappears and only the energy difference contributes to the dissipated energy. The energy which is then actually injected or extracted is given by
+
+$$\dot E_{Storage}=P_{To Storage}-P_{From Storage}-D_{Storage}$$
+
+As energy is stored over time, the total energy in the storage containment system can be given by
+
+$$E_{Storage}(t)=\int \dot E_{Storage}dt+E_{Storage}(0)$$
 
 ### Extraction
 During extraction, the dissipated energy is given by
