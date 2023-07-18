@@ -223,7 +223,7 @@ $$\dot{E} + b E = -d P_{\rm demand}$$
 
 where $d = (1-a_{\rm Extraction})^{-1}(1-a_{\rm demandTransport})^{-1}$. With the initial condition $E(T^*)=E_{\rm charge} e^{-b T_{\rm store}} := E_{\rm store}$, the solution is given by
 
-$$E = (e^{-b(t-T^*)} -1) \frac{d}{b} P_{\rm demand} + E_{\rm store} e^{-b(t-T^*)} \qquad T^* \leq t \leq T^* + T_{\rm discharge}$$
+$$E = (e^{-b(t-{T^{*}})} -1) \frac{d}{b} P_{\rm demand} + E_{\rm store} e^{-b(t-{T^{*}})} \qquad T^* \leq t \leq T^* + T_{\rm discharge}$$
 
 Comparison of this exact solution with the Simulink model conveys that the model solves the model equations as intended:
 
