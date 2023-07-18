@@ -1,77 +1,230 @@
 # EST-model
-Simulink model for the Energy Storage and Transport project. This Simulink model contains a simplified version of a real-life Energy Storage and Transport system, which describes the flow of energy in such a system. A supporting MATLAB file is provided which can be used to predefine parameters and to post-process data into figures.
+This project contains the *Simulink model* for the **Energy Storage and Transport (EST)** project. This Simulink model contains a simplified version of a real-life energy storage and transport system, which describes the flow of energy in such a system. Supporting MATLAB files are provided which can be used to predefine parameters and to post-process data into figures.
 
-Each subsystem in the model can be described by the following set of equations
+## Getting started
+### Version requirements
+The simulink model [EST.slx](EST.slx) requires **Matlab R2022b** or newer, with the **Simulink** toolbox installed. Older, untested, versions are available in the [versions](versions/) directory.
 
-$$\dot{E}=P_{in}-P_{out}-D$$
+### Overview of files and directory structure
+* [EST.slx](EST.slx): Main file, containing the runnable Simulink model of the EST system.
+* [preprocessing.m](preprocessing.m): Matlab script to define the model parameters and to read the supply and demand data files. Automatically executed by the Simulink model before running.
+* [postprocessing.m](postprocessing.m): Matlab script to plot the model results. Automatically executed by the Simulink model after running.
+* [data directory](data/): Directory from which the supply and demand data is to be read. By default, the directory contains example files for a storage system in a household with solar panels (see [Running the model](#running-the-model)), and the files for a charge/discharge cycle (see [Charge/discharge cycle](#chargedischarge-cycle)).
 
-where $\dot{E}$ is the change of total energy in the subsystem, $P_{in}$ the incoming power, $P_{out}$ the outgoing power and $D$ the dissipated energy which is described by
+## Running the model
+To run the model, open [EST.slx](EST.slx) and click the run button:
+![Run model](images/runmodel.png)
+After running is complete, the following output is displayed:
+![Run results 1](images/runoutput1.png)
+![Run results 2](images/runoutput2.png)
 
-$$D=\beta E + \alpha \dot{E}$$
+These results correspond to the default model settings, as configured in the [preprocessing.m](preprocessing.m) Matlab script:
 
-where $\alpha$ and $\beta$ are some dissipation coefficients and $E$ the total energy in the subsystem. As all the subsystems, except the storage containment system are flowing systems, there is no stored-up energy in them, meaning that the first term in the dissipated energy equation is neglected.
+```matlab
+% Pre-processing script for the EST Simulink model. This script is invoked
+% before the Simulink model starts running (initFcn callback function).
 
-## Supply and Demand
-The data sets provided in this repository (_DemandGroup00.csv_ and _SupplyGroup00.csv_) can be used to perform a unit test in the given model. Inside the MATLAB model, this data is converted to a .mat file, as this file type is compatible with Simulink. The .mat files are loaded into Simulink in the corresponding Supply and Demand Subsystems. Running the Simulink model with the files for the unit test should result in the graphs shown in Figure 1.
+%% Load the supply and demand data
 
-<img src="/Images/unit_test.png" width="600">
+timeUnit   = 's';
 
-*Figure 1: Results of the unit test*
+supplyFile = "SolarExample_supply.csv";
+supplyUnit = "kW";
 
-## Transport from supply
-During transportation from the supply, the dissipated energy is given by
+% load the supply data
+Supply = loadSupplyData(supplyFile, timeUnit, supplyUnit);
 
-$$D_{Transport From Supply}=\alpha_{Transport From Supply} P_{From Supply}$$
+demandFile = "SolarExample_demand.csv";
+demandUnit = "kW";
 
-the energy which isn't dissipated is then given by
+% load the demand data
+Demand = loadDemandData(demandFile, timeUnit, demandUnit);
 
-$$P_{To Controller} = P_{From Supply} - D_{Transport From Supply}$$
+%% Simulation settings
 
-## Transport to demand
-During transportation to the demand, the dissipated energy is given by (Note, this is a reversed process as the demand is a known value)
+deltat = 5*unit("min");
+stopt  = min([Supply.Timeinfo.End, Demand.Timeinfo.End]);
 
-$$D_{Transport To Demand}=\frac{\alpha_{Transport To Demand}}{1+\alpha_{Transport To Demand}} P_{To Demand}$$
+%% System parameters
 
-the energy which has to be provided while taking the dissipated energy into a count is then given by
+% transport from supply
+aSupplyTransport = 0.01; % Dissipation coefficient
 
-$$P_{From Controller} = P_{To Demand} - D_{Transport To Demand}$$
+% injection system
+aInjection = 0.1; % Dissipation coefficient
 
-## Controller
-The controller is the basis of the model, it determines if there is enough energy supplied to meet the demand by extracting extra energy from the storage containment system if needed or by selling/buying energy from the grid in the form of load balancing. Therefore, the power difference $\Delta_P$ between $P_{To Controller}$ and $P_{From Controller}$ is first calculated. Based on the sign of this difference the following two actions can take place;
-* The sign is postive ($\Delta_P \geq 0$). If the storage system is not yet full, the power surplus is sent toward the storage system. If the storage system is full, the power surplus is sold to the grid. 
-* The sign is negative ($\Delta_P < 0$). If the storage system is above the minimum energy level, the power deficit is extracted from the storage system. If the storage system is empty, the power deficit is bought from the grid.
+% storage system
+EStorageMax     = 10.*unit("kWh"); % Maximum energy
+EStorageMin     = 0.0*unit("J");   % Minimum energy
+EStorageInitial = 2.0*unit("kWh"); % Initial energy
+bStorage        = 1e-6/unit("s");  % Storage dissipation coefficient
 
-## Storage containment system
-The storage containment system can be described by three different subsystems; injection, storage and extraction. 
+% extraction system
+aExtraction = 0.1; % Dissipation coefficient
 
-### Injection
-During injection, the dissipated energy is given by
+% transport to demand
+aDemandTransport = 0.01; % Dissipation coefficient
+```
 
-$$D_{Injection} = \alpha_{Injection}  P_{To Injection}$$
+## Theory and implementation
+The EST system transports energy from the `Supply` to the `Demand`, both represented by a `block` in the Simulink model, possibly storing the energy in between. The EST model consists of five components (`blocks`), in the order of the energy flow:
+1. `Transport from supply`: transports the energy from the supply site to the storage site.
+2. `Injection`: inserts energy into the storage container.
+3. `Storage`: container in which the energy is stored.
+4. `Extraction`: extracts energy from the storage container.
+5. `Transport to demand`: transports the energy from the storage site to the demand site.
 
-the energy which is then injected is given by
+The flow of energy between these components is managed by a `controller`, which ensures that the electrical power balance is satisfied through load balancing (buying or selling of energy).
 
-$$P_{To Storage} = P_{To Injection} - D_{Injection}$$
+Each subsystem in the model can be described by
 
-### Storage
-During storing of the energy in the storage containment system, energy is injected and extracted. Some of the energy is also dissipated which can be described by
+$$\dot{E}=P_{\rm in}-P_{\rm out}-D$$
 
-*Hier nog even goed naar kijken! Laatste term verandert in $P_{To Storage}+P_{From Storage}$, want anders is dissipation positief tijdens extractie.*
-$$D_{Storage}=\beta_{Storage}\frac{1}{1+\alpha_{Storage}}(E_{Storage}-E_{Storage Min})+\frac{\alpha_{Storage}}{1+\alpha_{Storage}}(P_{To Storage}+P_{From Storage})$$
+where $\dot{E}$ is the change of total energy in the subsystem, $P_{\rm in}$ the incoming power, $P_{\rm out}$ the outgoing power and $D$ the rate of dissipation in the subsystem. 
 
-From this equation, it can be seen that for $\alpha &#8594 \infty$, the energy difference disappears and only the power term contributes to the dissipated energy. For $\alpha &#8594 0$, the power term disappears and only the energy difference contributes to the dissipated energy. The energy which is then actually injected or extracted is given by
+For the `Transport from supply`, `Injection`, `Extraction`and `Transport to demand` components, the EST model assumes $\dot{E}=0$ and
 
-$$\dot E_{Storage}=P_{To Storage}-P_{From Storage}-D_{Storage}$$
+$$D= a P_{\rm in}$$
 
-As energy is stored over time, the total energy in the storage containment system can be given by
+where $a$ [-] is the subsystem dissipation coefficients. It then follows that
 
-$$E_{Storage}(t)=\int \dot E_{Storage}dt+E_{Storage}(0)$$
+$$P_{\rm out} = P_{\rm in} - D = (1-a) P_{\rm in}$$
 
-### Extraction
-During extraction, the dissipated energy is given by
+These relations are implemented in Simulink through `Matlab function blocks`, for example for the `Injection` component:
 
-$$D_{Extraction}=\frac{\alpha_{Extraction}}{1+\alpha_{Extraction}} P_{From Extraction}$$
+```matlab
+function [PfromInjection, DInjection] = injection(PtoInjection, aInjection)
+    DInjection = aInjection * PtoInjection;
+    PfromInjection = PtoInjection - DInjection;
+```
 
-the energy which is then extracted is given by
+Note that $P_{\rm in}$ and $P_{\rm out}$ are here represented by `PtoInjection` and `PfromInjection`, respectively. The `Transport from supply` component follows the same implementation:
 
-$$P_{From Storage} = P_{From Extraction} + D_{Extraction}$$
+```matlab
+function [PfromSupplyTransport, DSupplyTransport] = supplyTransport(PtoSupplyTransport, aSupplyTransport)
+    DSupplyTransport = aSupplyTransport * PtoSupplyTransport;
+    PfromSupplyTransport = PtoSupplyTransport - DSupplyTransport;
+```
+
+When $P_{\rm out}$ serves as the input of the system, for example for the `Extraction` component, the dissipation and power functions must be rewritten to
+
+$$D = \frac{a}{1-a} P_{\rm out}$$
+
+and
+
+$$P_{\rm in} = P_{\rm out} + D = \frac{1}{1-a} P_{\rm out}$$
+
+The implementation then follows as:
+
+```matlab
+function [PtoExtraction, DExtraction] = extraction(PfromExtraction, aExtraction)
+    DExtraction = aExtraction / (1-aExtraction) * PfromExtraction;
+    PtoExtraction = PfromExtraction + DExtraction;
+```
+
+Similarly, for the `Transport to demand` component, the implementation reads:
+
+```matlab
+function [PtoDemandTransport, DDemandTransport] = demandTransport(PfromDemandTransport, aDemandTransport)
+    DDemandTransport = aDemandTransport / (1-aDemandTransport) * PfromDemandTransport;
+    PtoDemandTransport = PfromDemandTransport + DDemandTransport;
+```
+
+For the `Storage` component, the dissipation model
+
+$$D= b (E - E_{\rm min})$$
+
+is assumed, where $E_{\rm min}$ is the minimum energy capacity of the system (by default set to 0) and $b$ [1/s] is the storage dissipation coefficient. This model essential states that the dissipation is proportional to the amount of energy stored.
+
+Substitution of this dissipation model in the power balance results in the differential equation (DE)
+
+$$\dot{E} + b E =P_{\rm in}-P_{\rm out}+b E_{\rm min}$$
+
+In the Simulink model, this differential equation is integrated explicitly, meaning that $\dot{E}$ is computed based on the energy $E$ in the previous time step:
+
+```matlab
+function [DStorage, EdotStorage]= Storage(PtoStorage, PfromStorage, bStorage, aStorage , EStorageMin, EStorage)
+    DStorage = bStorage * (EStorage-EStorageMin);
+    EdotStorage = PtoStorage - PfromStorage - DStorage;
+```
+
+## Charge/discharge cycle
+To illustrate the theory behind the model, we consider a single charge/discharge cycle. In this cycle, the energy system is charged for $T_{\rm charge}=3$ [h] with a power of $P_{\rm charge}=15$ [kW], after which the energy is stored for $T_{\rm store}=8$ [h], until the system is discharged for $T_{\rm discharge}=1$ [h] with a power of $P_{\rm discharge}=5$ [kW]. The corresponding supply and demand signals are stored in the [CycleExample_supply.csv](CycleExample_supply.csv) and [CycleExample_demand.csv](CycleExample_supply.csv) files. To read these files, the [preprocessing.m](preprocessing.m) file is configured as:
+
+```matlab
+% Pre-processing script for the EST Simulink model. This script is invoked
+% before the Simulink model starts running (initFcn callback function).
+
+%% Load the supply and demand data
+
+timeUnit   = 's';
+
+supplyFile = "CycleExample_supply.csv";
+supplyUnit = "kW";
+
+% load the supply data
+Supply = loadSupplyData(supplyFile, timeUnit, supplyUnit);
+
+demandFile = "CycleExample_demand.csv";
+demandUnit = "kW";
+
+% load the demand data
+Demand = loadDemandData(demandFile, timeUnit, demandUnit);
+```
+The time step size, `deltat`, used in the simulation is also specified in [preprocessing.m](preprocessing.m) and the final simulation time, `stopt`, is determined from the loaded time series:
+```matlab
+%% Simulation settings
+
+deltat = 5*unit("min");
+stopt  = min([Supply.Timeinfo.End, Demand.Timeinfo.End]);
+```
+Finally, the dissipation coefficients are given by:
+```matlab
+%% System parameters
+
+% transport from supply
+aSupplyTransport = 0.01; % Dissipation coefficient
+
+% injection system
+aInjection = 0.1; % Dissipation coefficient
+
+% storage system
+EStorageMax     = 40*unit("kWh"); % Maximum energy
+EStorageMin     = 0.0*unit("J");  % Minimum energy
+EStorageInitial = 0.0*unit("J");  % Initial energy
+bStorage        = 5e-5/unit('s'); % Storage dissipation coefficient
+
+% extraction system
+aExtraction = 0.1; % Dissipation coefficient
+
+% transport to demand
+aDemandTransport = 0.01; % Dissipation coefficient
+```
+
+For this particular scenario, an exact solution to the model exists, which can be used to **verify the Simulink implementation**. During charging, the power balance differential equation for the storage container reads
+
+$$\dot{E} + b E = c P_{\rm supply}$$
+
+where $c = (1-a_{\rm supplyTransport}) (1-a_{\rm Injection})$. With the initial condition $E(0)=0$, the solution is given by
+
+$$E = (1 - e^{-bt}) \frac{c}{b} P_{\rm supply} \qquad 0 \leq t < T_{\rm charge}$$
+
+During storage, the power balance reads
+
+$$\dot{E} + b E = 0$$
+
+with the initial condition $E(T_{\rm charge}) = (1 - e^{-bT_{\rm charge}}) \frac{c}{b} P_{\rm supply} := E_{\rm charge}$. The solution during storage is given by
+
+$$E = E_{\rm charge} e^{-b(t - T_{\rm charge})} \qquad T_{\rm charge} \leq t \leq T^*$$
+
+where $T^* = T_{\rm charge} + T_{\rm store}$. Finally, during discharging, the differential equation reads
+
+$$\dot{E} + b E = -d P_{\rm demand}$$
+
+where $d = (1-a_{\rm Extraction})^{-1}(1-a_{\rm demandTransport})^{-1}$. With the initial condition $E(T^*)=E_{\rm charge} e^{-b T_{\rm store}} := E_{\rm store}$, the solution is given by
+
+$$E = (e^{-b(t-T^*)} -1) \frac{d}{b} P_{\rm demand} + E_{\rm store} e^{-b(t-T^*)} \qquad T^* \leq t \leq T^* + T_{\rm discharge}$$
+
+Comparison of this exact solution with the Simulink model conveys that the model solves the model equations as intended:
+
+![Run results 2](images/charge.png)
