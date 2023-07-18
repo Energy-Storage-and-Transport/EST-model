@@ -215,15 +215,15 @@ $$\dot{E} + b E = 0$$
 
 with the initial condition $E(T_{\rm charge}) = (1 - e^{-bT_{\rm charge}}) \frac{c}{b} P_{\rm supply} := E_{\rm charge}$. The solution during storage is given by
 
-$$E = E_{\rm charge} e^{-b(t - T_{\rm charge})} \qquad T_{\rm charge} \leq t \leq T^*$$
+$$E = E_{\rm charge} e^{-b(t - T_{\rm charge})} \qquad T_{\rm charge} \leq t \leq \tau$$
 
-where $T^* = T_{\rm charge} + T_{\rm store}$. Finally, during discharging, the differential equation reads
+where $\tau = T_{\rm charge} + T_{\rm store}$. Finally, during discharging, the differential equation reads
 
 $$\dot{E} + b E = -d P_{\rm demand}$$
 
-where $d = (1-a_{\rm Extraction})^{-1}(1-a_{\rm demandTransport})^{-1}$. With the initial condition $E(T^*)=E_{\rm charge} e^{-b T_{\rm store}} := E_{\rm store}$, the solution is given by
+where $d = (1-a_{\rm Extraction})^{-1}(1-a_{\rm demandTransport})^{-1}$. With the initial condition $E(\tau)=E_{\rm charge} e^{-b T_{\rm store}} := E_{\rm store}$, the solution is given by
 
-$$E = (e^{-b(t-{T^{*}})} -1) \frac{d}{b} P_{\rm demand} + E_{\rm store} e^{-b(t-{T^{*}})} \qquad T^* \leq t \leq T^* + T_{\rm discharge}$$
+$$E = (e^{-b(t-\tau)} -1) \frac{d}{b} P_{\rm demand} + E_{\rm store} e^{-b(t-\tau)} \qquad \tau \leq t \leq \tau + T_{\rm discharge}$$
 
 Comparison of this exact solution with the Simulink model conveys that the model solves the model equations as intended:
 
