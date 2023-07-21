@@ -1,2 +1,6 @@
 *.asv
 *.mat
+.DS_Store
+*.slxc
+*.l
+simulink_cache.xml
