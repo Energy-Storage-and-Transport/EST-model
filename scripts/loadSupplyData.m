@@ -1,5 +1,5 @@
 function Supply = loadSupplyData(supplyFile, timeUnit, supplyUnit)
-% LOADSUPPLYDATA  Load the supply data from the specified file.
+%   LOADSUPPLYDATA  Load the supply data from the specified file.
 %   Supply = LOADSUPPLYDATA(supplyFile, supplyUnit) loads the
 %   data in supplyFile with the time in timeUnit and the power in
 %   supplyUnit, returning a time series.

@@ -1,7 +1,7 @@
 % Script defining constants, specifically the "units" dictionary.
 
 global unit;
-unit = dictionary();
+unit = containers.Map;
 
 % time
 unit("s")    = 1.;

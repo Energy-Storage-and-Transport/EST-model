@@ -1,5 +1,5 @@
 function Demand = loadDemandData(demandFile, timeUnit, demandUnit)
-% LOADDEMANDDATA  Load the demand data from the specified file.
+%   LOADDEMANDDATA  Load the demand data from the specified file.
 %   Demand = LOADDEMANDDATA(demandFile, timeUnit, demandUnit) loads the
 %   data in demandFile with the time in timeUnit and the power in
 %   demandUnit, returning a time series.
