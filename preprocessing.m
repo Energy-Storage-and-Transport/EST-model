@@ -33,7 +33,7 @@ aInjection = 0.1; % Dissipation coefficient
 % storage system
 EStorageMax     = 10.*unit("kWh"); % Maximum energy
 EStorageMin     = 0.0*unit("kWh"); % Minimum energy
-EStorageInitial = 1.0*unit("kWh"); % Initial energy
+EStorageInitial = 2.0*unit("kWh"); % Initial energy
 bStorage        = 1e-6/unit("s");  % Storage dissipation coefficient
 
 % extraction system
