@@ -3,7 +3,7 @@ This project contains the *Simulink model* for the **Energy Storage and Transpor
 
 ## Getting started
 ### Version requirements
-The simulink model [EST.slx](EST.slx) requires **Matlab R2022b** or newer, with the **Simulink** toolbox installed. Older, untested, versions are available in the [versions](versions/) directory.
+The simulink model [EST.slx](EST.slx) requires **Matlab R2022b** or newer, with the **Simulink** toolbox installed. Older, untested, versions are available in the [versions](versions/) directory. In order to run an older version, copy the Simulink file corresponding to your version into the main directory and make sure to restart both MATLAB and Simulink before running it.
 
 ### Overview of files and directory structure
 * [EST.slx](EST.slx): Main file, containing the runnable Simulink model of the EST system.
