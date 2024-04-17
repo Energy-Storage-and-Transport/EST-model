@@ -2,6 +2,8 @@
 This project contains the *Simulink model* for the **Energy Storage and Transport (EST)** project. This Simulink model contains a simplified version of a real-life energy storage and transport system, which describes the flow of energy in such a system. Supporting MATLAB files are provided which can be used to predefine parameters and to post-process data into figures.
 
 ## Getting started
+To install the simulink model, just clone or download the entire repository (under `<Code>`) and open [EST.slx](EST.slx). If you download the zip file for the repository, make sure to properly unzip it, as otherwise errors occur.
+
 ### Version requirements
 The simulink model [EST.slx](EST.slx) requires **Matlab R2022b** or newer, with the **Simulink** toolbox installed. Older, untested, versions are available in the [versions](versions/) directory. In order to run an older version, copy the Simulink file corresponding to your version into the main directory and make sure to restart both MATLAB and Simulink before running it.
 
