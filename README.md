@@ -20,7 +20,13 @@ After running is complete, the following output is displayed:
 ![Run results 1](images/runoutput1.png)
 ![Run results 2](images/runoutput2.png)
 
-These results correspond to the default model settings, as configured in the [preprocessing.m](preprocessing.m) Matlab script:
+> [!CAUTION]
+> When the code gives an error, carefully check the following:
+> - Did you install the complete repository? Only downloading [EST.slx](EST.slx) does not work.
+> - If you downloaded the zip file, did you unpack it?
+> - Is the Matlab current working directory set to the right folder, that is, the folder in which [EST.slx](EST.slx) is placed. 
+
+The results displayed above correspond to the default model settings, as configured in the [preprocessing.m](preprocessing.m) Matlab script:
 
 ```matlab
 % Pre-processing script for the EST Simulink model. This script is invoked
